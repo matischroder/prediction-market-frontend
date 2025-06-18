@@ -1,0 +1,16 @@
+{
+  "mumbai": {
+    "marketFactory": "0x...",
+    "usdc": "0x...",
+    "proofOfReserves": "0x...",
+    "ccipBridge": "0x...",
+    "chainlinkFunctions": "0x..."
+  },
+  "sepolia": {
+    "marketFactory": "0x...",
+    "usdc": "0x...",
+    "proofOfReserves": "0x...",
+    "ccipBridge": "0x...",
+    "chainlinkFunctions": "0x..."
+  }
+}
