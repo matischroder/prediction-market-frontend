@@ -4,9 +4,9 @@ export const formatAddress = (address: string): string => {
 
 export const formatAmount = (amount: string, decimals: number = 18): string => {
   const value = parseFloat(amount) / Math.pow(10, decimals);
-  return value.toLocaleString('en-US', {
+  return value.toLocaleString("en-US", {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 4
+    maximumFractionDigits: 4,
   });
 };
 
@@ -17,13 +17,13 @@ export const formatDate = (timestamp: number): string => {
 export const calculateTimeLeft = (timestamp: number): string => {
   const now = Date.now() / 1000;
   const diff = timestamp - now;
-  
-  if (diff <= 0) return 'Ended';
-  
+
+  if (diff <= 0) return "Ended";
+
   const days = Math.floor(diff / 86400);
   const hours = Math.floor((diff % 86400) / 3600);
   const minutes = Math.floor((diff % 3600) / 60);
-  
+
   if (days > 0) return `${days}d ${hours}h`;
   if (hours > 0) return `${hours}h ${minutes}m`;
   return `${minutes}m`;
@@ -35,5 +35,5 @@ export const formatPercentage = (value: number): string => {
 
 export const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength) + '...';
+  return text.slice(0, maxLength) + "...";
 };

@@ -4,12 +4,13 @@
 
 @layer base {
   html {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
   }
-  
   body {
-    background-color: #fafafa;
-    color: #1f2937;
+    @apply bg-palette-bg-light text-palette-text-light transition-colors duration-300;
+  }
+  .dark body {
+    @apply bg-palette-bg-dark text-palette-text-dark;
   }
 }
 
@@ -17,28 +18,30 @@
   .btn {
     @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
   }
-  
   .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+    @apply bg-palette-primary-light text-white hover:bg-palette-primary-dark focus:ring-palette-primary-light dark:bg-palette-primary-dark dark:hover:bg-palette-primary-light dark:focus:ring-palette-primary-dark;
   }
-  
   .btn-secondary {
-    @apply bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500;
+    @apply bg-palette-accent-light text-palette-text-light hover:bg-palette-accent-dark focus:ring-palette-accent-light dark:bg-palette-accent-dark dark:text-palette-text-dark dark:hover:bg-palette-accent-light dark:focus:ring-palette-accent-dark;
   }
-  
   .btn-success {
-    @apply bg-success-600 text-white hover:bg-success-700 focus:ring-success-500;
+    @apply bg-success-600 text-white hover:bg-success-500 focus:ring-success-500 dark:bg-success-500 dark:hover:bg-success-600 dark:focus:ring-success-600;
   }
-  
   .btn-danger {
-    @apply bg-danger-600 text-white hover:bg-danger-700 focus:ring-danger-500;
+    @apply bg-danger-600 text-white hover:bg-danger-500 focus:ring-danger-500 dark:bg-danger-500 dark:hover:bg-danger-600 dark:focus:ring-danger-600;
   }
-  
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+    @apply bg-palette-card-light rounded-xl shadow-sm border border-palette-border-light p-4 sm:p-6 dark:bg-palette-card-dark dark:border-palette-border-dark;
   }
-  
   .input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+    @apply w-full px-3 py-2 border border-palette-border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-palette-primary-light focus:border-transparent dark:bg-palette-card-dark dark:border-palette-border-dark dark:text-palette-text-dark dark:focus:ring-palette-primary-dark;
+  }
+
+  /* Responsive tweaks for mobile */
+  .market-list {
+    @apply grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3;
+  }
+  .market-card {
+    @apply mb-4 sm:mb-0;
   }
 }
