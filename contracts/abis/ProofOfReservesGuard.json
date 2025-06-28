@@ -1,0 +1,147 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ProofOfReservesGuard",
+  "sourceName": "contracts/ProofOfReservesGuard.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "MinimumReservesUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "feed",
+          "type": "address"
+        }
+      ],
+      "name": "ReserveFeedUpdated",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        }
+      ],
+      "name": "checkReserves",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "sufficient",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint256",
+          "name": "reserves",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "minimumReserves",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "reserveFeeds",
+      "outputs": [
+        {
+          "internalType": "contract AggregatorV3Interface",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "setMinimumReserves",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "feed",
+          "type": "address"
+        }
+      ],
+      "name": "setReserveFeed",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608080604052346100165761035d908161001c8239f35b600080fdfe60806040818152600436101561001457600080fd5b600091823560e01c9081631d90ee45146101b8575080631eea0d5c1461013157806331ccadfb146100f857806347af4704146100c15763f27c06771461005957600080fd5b346100bd57806003193601126100bd577f89aec1233abd217be7d82a7c4f4e18be9ba5b5d1af567b732a1ae42d4b96c495906100936102f5565b6001600160a01b03168084526001602090815282852060243590819055835192835290820152a180f35b5080fd5b50346100bd5760203660031901126100bd5760209181906001600160a01b036100e86102f5565b1681526001845220549051908152f35b50346100bd5760203660031901126100bd576020916001600160a01b03908290826101216102f5565b1681528085522054169051908152f35b50346100bd57806003193601126100bd5761014a6102f5565b906024356001600160a01b03818116918290036101b4577fae9e338340467770d319c8ae66df2648d94fa9ec3d1f335aaed0815837a03f0c93169081855284602052828520816bffffffffffffffffffffffff60a01b82541617905582519182526020820152a180f35b8480fd5b8284346102f257602090816003193601126102f2576001600160a01b03806101de6102f5565b169081835282845284832054169485156102ba575060a08495600494955194858092633fabe5a360e21b82525afa9283156102b057908291869394610235575b508152600184522054811015918351928352820152f35b919250925060a03d81116102a9575b601f8101601f1916820167ffffffffffffffff8111838210176102955760a09183918852810103126100bd57908161027c8693610310565b5061028d6080868301519201610310565b50928661021e565b634e487b7160e01b84526041600452602484fd5b503d610244565b85513d84823e3d90fd5b62461bcd60e51b8152600481018490526013602482015272139bc81c995cd95c9d994819995959081cd95d606a1b6044820152606490fd5b80fd5b600435906001600160a01b038216820361030b57565b600080fd5b519069ffffffffffffffffffff8216820361030b5756fea26469706673582212205f0832d706d8f221c5b6dcb038a0dd7de2e4b5163fc5678158a86f9dd9398f5064736f6c63430008130033",
+  "deployedBytecode": "0x60806040818152600436101561001457600080fd5b600091823560e01c9081631d90ee45146101b8575080631eea0d5c1461013157806331ccadfb146100f857806347af4704146100c15763f27c06771461005957600080fd5b346100bd57806003193601126100bd577f89aec1233abd217be7d82a7c4f4e18be9ba5b5d1af567b732a1ae42d4b96c495906100936102f5565b6001600160a01b03168084526001602090815282852060243590819055835192835290820152a180f35b5080fd5b50346100bd5760203660031901126100bd5760209181906001600160a01b036100e86102f5565b1681526001845220549051908152f35b50346100bd5760203660031901126100bd576020916001600160a01b03908290826101216102f5565b1681528085522054169051908152f35b50346100bd57806003193601126100bd5761014a6102f5565b906024356001600160a01b03818116918290036101b4577fae9e338340467770d319c8ae66df2648d94fa9ec3d1f335aaed0815837a03f0c93169081855284602052828520816bffffffffffffffffffffffff60a01b82541617905582519182526020820152a180f35b8480fd5b8284346102f257602090816003193601126102f2576001600160a01b03806101de6102f5565b169081835282845284832054169485156102ba575060a08495600494955194858092633fabe5a360e21b82525afa9283156102b057908291869394610235575b508152600184522054811015918351928352820152f35b919250925060a03d81116102a9575b601f8101601f1916820167ffffffffffffffff8111838210176102955760a09183918852810103126100bd57908161027c8693610310565b5061028d6080868301519201610310565b50928661021e565b634e487b7160e01b84526041600452602484fd5b503d610244565b85513d84823e3d90fd5b62461bcd60e51b8152600481018490526013602482015272139bc81c995cd95c9d994819995959081cd95d606a1b6044820152606490fd5b80fd5b600435906001600160a01b038216820361030b57565b600080fd5b519069ffffffffffffffffffff8216820361030b5756fea26469706673582212205f0832d706d8f221c5b6dcb038a0dd7de2e4b5163fc5678158a86f9dd9398f5064736f6c63430008130033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

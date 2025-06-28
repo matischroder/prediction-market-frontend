@@ -1,17 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNetwork } from "wagmi";
 import Head from "next/head";
+import { ethers } from "ethers";
 import { MarketCard } from "@/components/MarketCard";
 import { Search, Filter, TrendingUp, Users, DollarSign } from "lucide-react";
 import { CreateMarketModal } from "@/components/CreateMarketModal";
 import { useMarkets } from "@/context/MarketContext";
-
-function getEnvAddress(key: string) {
-  if (typeof window !== "undefined") {
-    return process.env[key] || (window as any)[key] || "";
-  }
-  return process.env[key] || "";
-}
+import { formatAmount } from "@/utils/formatters";
+import {
+  usePopularFeedsFromContext,
+  useAllFeedsFromContext,
+} from "@/context/ChainlinkFeedsContext";
 
 interface HomeProps {
   showCreateModal: boolean;
@@ -22,12 +21,45 @@ export default function Home({
   showCreateModal,
   setShowCreateModal,
 }: HomeProps) {
-  const { chain } = useNetwork();
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "resolved">("all");
 
   // Usar el contexto para obtener los datos de mercados
-  const { markets, loading, createMarket } = useMarkets();
+  const { markets, loading, createMarket: createMarketOriginal } = useMarkets();
+
+  // Adapter function to convert between interfaces
+  const createMarket = async (
+    priceFeed: string,
+    assetName: string,
+    baseAsset: string,
+    targetPrice: string,
+    resolutionTime: number
+  ): Promise<string | null> => {
+    return await createMarketOriginal({
+      priceFeed,
+      assetName,
+      baseAsset,
+      targetPrice: ethers.BigNumber.from(targetPrice),
+      resolutionTime,
+    });
+  };
+
+  // Pre-cargar los feeds de Chainlink para que estén disponibles cuando se abra el modal
+  const popularFeeds = usePopularFeedsFromContext();
+  const allFeeds = useAllFeedsFromContext();
+
+  // Log para debug - puedes ver esto en la consola del navegador
+  useEffect(() => {
+    if (popularFeeds.feeds.length > 0) {
+      console.log(
+        "📊 Popular Chainlink feeds loaded:",
+        popularFeeds.feeds.length
+      );
+    }
+    if (allFeeds.feeds.length > 0) {
+      console.log("📈 All Chainlink feeds loaded:", allFeeds.feeds.length);
+    }
+  }, [popularFeeds.feeds.length, allFeeds.feeds.length]);
 
   // Get contract addresses from env
   const contractAddresses = {
@@ -39,35 +71,44 @@ export default function Home({
       process.env.NEXT_PUBLIC_CHAINLINK_FUNCTIONS_ADDRESS || "",
   };
 
-  // Filter markets based on search and filter
-  const filteredMarkets = markets.filter((market) => {
-    const matchesSearch = market.question
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
+  // Filter markets based on search and filter - optimized with useMemo
+  const filteredMarkets = useMemo(() => {
+    console.log("MARKETS", markets);
+    return markets.filter((market) => {
+      if (filter === "active") {
+        return !market.isResolved && market.resolutionTime * 1000 > Date.now();
+      }
 
-    if (!matchesSearch) return false;
+      if (filter === "resolved") {
+        return market.isResolved;
+      }
 
-    if (filter === "active") {
-      return !market.isResolved && market.resolutionTime * 1000 > Date.now();
-    }
+      return true;
+    });
+  }, [markets, searchTerm, filter]);
 
-    if (filter === "resolved") {
-      return market.isResolved;
-    }
+  // Calculate stats - optimized with useMemo
+  const { totalMarkets, activeMarkets, totalVolume } = useMemo(() => {
+    const total = markets.length;
+    const active = markets.filter(
+      (m) => !m.isResolved && m.resolutionTime * 1000 > Date.now()
+    ).length;
+    const volume = markets.reduce((sum, market) => {
+      return (
+        sum +
+        parseFloat(market.totalHigherBets) +
+        parseFloat(market.totalLowerBets)
+      );
+    }, 0);
 
-    return true; // 'all'
-  });
+    return {
+      totalMarkets: total,
+      activeMarkets: active,
+      totalVolume: volume,
+    };
+  }, [markets]);
 
-  // Calculate stats
-  const totalMarkets = markets.length;
-  const activeMarkets = markets.filter(
-    (m) => !m.isResolved && m.resolutionTime * 1000 > Date.now()
-  ).length;
-  const totalVolume = markets.reduce((sum, market) => {
-    return (
-      sum + parseFloat(market.totalYesBets) + parseFloat(market.totalNoBets)
-    );
-  }, 0);
+  console.log("filteredMarkets", filteredMarkets);
 
   return (
     <>
@@ -81,7 +122,7 @@ export default function Home({
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="min-h-screen bg-palette-bg-light dark:bg-palette-bg-dark transition-colors duration-300">
+      <div className="min-h-80 bg-palette-bg-light dark:bg-palette-bg-dark transition-colors duration-300">
         <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
           {/* Hero Section */}
           <div className="text-center mb-8 sm:mb-12">
@@ -135,7 +176,9 @@ export default function Home({
                 />
               </div>
               <div className="text-2xl font-bold text-palette-text-light dark:text-palette-text-dark">
-                {(totalVolume / 1000000).toFixed(1)}K
+                {totalVolume > 1000000000
+                  ? (totalVolume / 1000000000).toFixed(2) + "K"
+                  : (totalVolume / 1000000).toFixed(0)}
               </div>
               <div className="text-sm text-palette-text-light dark:text-palette-text-dark">
                 Volume
@@ -233,7 +276,7 @@ export default function Home({
             <div className="mt-8 p-4 bg-orange-50 border border-orange-200 rounded-lg">
               <div className="text-orange-800">
                 <strong>Network not supported:</strong> Please connect to
-                Polygon Mumbai or Ethereum Sepolia testnet.
+                Ethereum Sepolia testnet.
               </div>
             </div>
           )}

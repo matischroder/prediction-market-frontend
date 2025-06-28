@@ -1,16 +1,19 @@
 {
-  "mumbai": {
-    "marketFactory": "0x...",
-    "usdc": "0x...",
-    "proofOfReserves": "0x...",
-    "ccipBridge": "0x...",
-    "chainlinkFunctions": "0x..."
+  "network": "sepolia",
+  "chainId": 11155111,
+  "deployedAt": "2025-06-25T15:08:38.128Z",
+  "contracts": {
+    "mockUSDC": "0xB7752DB55B3b0C200b271EB87d54315ad6c4427a",
+    "marketFactory": "0xAADE9571859AF33b9cD1D851DAE0036fc431e148",
+    "testMarket": "Not created - needs LINK funding"
   },
-  "sepolia": {
-    "marketFactory": "0x...",
-    "usdc": "0x...",
-    "proofOfReserves": "0x...",
-    "ccipBridge": "0x...",
-    "chainlinkFunctions": "0x..."
-  }
+  "chainlink": {
+    "VRF_COORDINATOR": "0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625",
+    "LINK_TOKEN": "0x779877A7B0D9E8603169DdbD7836e478b4624789",
+    "KEY_HASH": "0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c",
+    "SUBSCRIPTION_ID": 1
+  },
+  "isProduction": true,
+  "isFork": false,
+  "isLocal": false
 }

@@ -10,35 +10,34 @@ import {
   Theme,
 } from "@rainbow-me/rainbowkit";
 import { configureChains, createConfig, WagmiConfig } from "wagmi";
-import { polygonMumbai, sepolia } from "wagmi/chains";
-import { alchemyProvider } from "wagmi/providers/alchemy";
 import { publicProvider } from "wagmi/providers/public";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "react-hot-toast";
 import { useState, useEffect, useCallback } from "react";
 import { useNetwork } from "wagmi";
 import { Header } from "../components/Header";
 import { MarketProvider } from "../context/MarketContext";
+import { ChainlinkFeedsProvider } from "../context/ChainlinkFeedsContext";
+import {
+  getChainConfig,
+  getProviderConfig,
+  getWalletConfig,
+} from "../config/chains";
+
+// Configuración dinámica de cadenas
+const chainConfig = getChainConfig();
+const providerConfig = getProviderConfig();
+const walletConfig = getWalletConfig();
 
 const { chains, publicClient } = configureChains(
-  [sepolia, polygonMumbai], // Sepolia primero para que sea default
-  [
-    publicProvider(), // Priorizar provider público para reducir rate limiting
-    alchemyProvider({
-      apiKey: process.env.NEXT_PUBLIC_ALCHEMY_ID || "",
-    }),
-  ],
-  {
-    // Additional caching and polling optimizations
-    pollingInterval: 30000, // 30 seconds global polling
-    stallTimeout: 10000, // 10 seconds before considering stale
-  }
+  chainConfig.chains,
+  [publicProvider()],
+  providerConfig
 );
 
 const { connectors } = getDefaultWallets({
-  appName: "Prediction Markets",
-  projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "",
+  appName: walletConfig.appName,
+  projectId: walletConfig.projectId,
   chains,
 });
 
@@ -95,16 +94,18 @@ function AppWithMarketContract({
 
   return (
     <MarketProvider factoryAddress={contractAddresses.marketFactory}>
-      <Header
-        dark={dark}
-        toggleDark={toggleDark}
-        onCreateMarket={() => setShowCreateModal(true)}
-      />
-      <Component
-        {...pageProps}
-        showCreateModal={showCreateModal}
-        setShowCreateModal={setShowCreateModal}
-      />
+      <ChainlinkFeedsProvider>
+        <Header
+          dark={dark}
+          toggleDark={toggleDark}
+          onCreateMarket={() => setShowCreateModal(true)}
+        />
+        <Component
+          {...pageProps}
+          showCreateModal={showCreateModal}
+          setShowCreateModal={setShowCreateModal}
+        />
+      </ChainlinkFeedsProvider>
     </MarketProvider>
   );
 }
@@ -179,7 +180,7 @@ export default function App({ Component, pageProps }: AppProps) {
           chains={chains}
           theme={rainbowTheme}
           modalSize="compact"
-          initialChain={sepolia}
+          initialChain={chainConfig.defaultChain}
         >
           <AppWithMarketContract
             Component={Component}
@@ -214,7 +215,7 @@ export default function App({ Component, pageProps }: AppProps) {
               },
             }}
           />
-          <ReactQueryDevtools initialIsOpen={false} />
+          {/* DevTools removido para reducir bundle size */}
         </RainbowKitProvider>
       </WagmiConfig>
     </QueryClientProvider>

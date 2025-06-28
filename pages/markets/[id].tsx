@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNetwork, useAccount } from "wagmi";
 import Head from "next/head";
 import Link from "next/link";
+import { ethers } from "ethers";
 import {
   ArrowLeft,
   Calendar,
@@ -10,6 +11,11 @@ import {
   TrendingUp,
   Award,
   ExternalLink,
+  Bot,
+  CheckCircle,
+  Zap,
+  Gift,
+  Clock,
 } from "lucide-react";
 
 import { Market } from "@/types/contracts";
@@ -53,11 +59,20 @@ export default function MarketDetail({
   const [market, setMarket] = useState<Market | null>(null);
   const [showBetModal, setShowBetModal] = useState(false);
   const [localUserBets, setLocalUserBets] = useState({
+    higherBet: "0",
+    lowerBet: "0",
+    hasClaimed: false,
+    betIndices: [] as number[],
+    // Backward compatibility
     yesBet: "0",
     noBet: "0",
-    hasClaimed: false,
   });
-  const [localOdds, setLocalOdds] = useState({ yesOdds: 5000, noOdds: 5000 });
+  const [localOdds, setLocalOdds] = useState({
+    higherOdds: 2.0,
+    lowerOdds: 2.0,
+    yesOdds: 2.0,
+    noOdds: 2.0,
+  });
 
   // Usar el contexto para obtener los datos
   const { markets, createMarket } = useMarkets();
@@ -97,13 +112,25 @@ export default function MarketDetail({
   // Update local state when TanStack Query data changes
   useEffect(() => {
     if (oddsData) {
-      setLocalOdds(oddsData);
+      setLocalOdds({
+        higherOdds: oddsData.higherOdds,
+        lowerOdds: oddsData.lowerOdds,
+        yesOdds: oddsData.yesOdds || oddsData.higherOdds,
+        noOdds: oddsData.noOdds || oddsData.lowerOdds,
+      });
     }
   }, [oddsData]);
 
   useEffect(() => {
     if (userBetsData) {
-      setLocalUserBets(userBetsData);
+      setLocalUserBets({
+        higherBet: userBetsData.higherBet,
+        lowerBet: userBetsData.lowerBet,
+        hasClaimed: userBetsData.hasClaimed,
+        betIndices: userBetsData.betIndices,
+        yesBet: userBetsData.yesBet || userBetsData.higherBet,
+        noBet: userBetsData.noBet || userBetsData.lowerBet,
+      });
     }
   }, [userBetsData]);
 
@@ -121,13 +148,14 @@ export default function MarketDetail({
   }
 
   const totalPool =
-    parseFloat(market.totalYesBets) + parseFloat(market.totalNoBets);
+    parseFloat(market.totalHigherBets) + parseFloat(market.totalLowerBets);
   const hasEnded = market.resolutionTime * 1000 < Date.now();
   const timeLeft = calculateTimeLeft(market.resolutionTime);
   const hasUserBets =
-    parseFloat(localUserBets.yesBet) > 0 || parseFloat(localUserBets.noBet) > 0;
+    parseFloat(localUserBets.higherBet) > 0 ||
+    parseFloat(localUserBets.lowerBet) > 0;
   const userTotalBet =
-    parseFloat(localUserBets.yesBet) + parseFloat(localUserBets.noBet);
+    parseFloat(localUserBets.higherBet) + parseFloat(localUserBets.lowerBet);
 
   return (
     <>
@@ -206,6 +234,81 @@ export default function MarketDetail({
               </div>
             </div>
 
+            {/* Automation Status */}
+            {market.isAutomated && (
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center mb-3">
+                  <Bot size={20} className="text-blue-600 mr-2" />
+                  <span className="font-medium text-blue-900">
+                    Chainlink Automation
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div className="flex items-center">
+                    <CheckCircle
+                      size={16}
+                      className={`mr-2 ${
+                        market.automationRegistered
+                          ? "text-green-600"
+                          : "text-gray-400"
+                      }`}
+                    />
+                    <span
+                      className={
+                        market.automationRegistered
+                          ? "text-green-700"
+                          : "text-gray-600"
+                      }
+                    >
+                      Automation:{" "}
+                      {market.automationRegistered ? "Registered" : "Pending"}
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <Zap
+                      size={16}
+                      className={`mr-2 ${
+                        market.vrfFulfilled
+                          ? "text-purple-600"
+                          : market.vrfRequested
+                          ? "text-yellow-600"
+                          : "text-gray-400"
+                      }`}
+                    />
+                    <span
+                      className={
+                        market.vrfFulfilled
+                          ? "text-purple-700"
+                          : market.vrfRequested
+                          ? "text-yellow-700"
+                          : "text-gray-600"
+                      }
+                    >
+                      VRF:{" "}
+                      {market.vrfFulfilled
+                        ? "Complete"
+                        : market.vrfRequested
+                        ? "Requested"
+                        : "Pending"}
+                    </span>
+                  </div>
+                  {market.isResolved && market.randomWinner && (
+                    <div className="flex items-center">
+                      <Gift size={16} className="text-orange-600 mr-2" />
+                      <span className="text-orange-700">
+                        Bonus Winner: {market.randomWinner.slice(0, 8)}...
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-2 text-xs text-blue-600 flex items-center">
+                  <Clock size={12} className="mr-1" />
+                  This market resolves automatically at expiry using Chainlink
+                  Automation and VRF
+                </div>
+              </div>
+            )}
+
             {hasUserBets && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <div className="flex items-center mb-2">
@@ -282,7 +385,11 @@ export default function MarketDetail({
                     </span>
                   </div>
                   <div className="text-sm text-success-600">
-                    {formatAmount(market.totalYesBets, 6)} USDC backed
+                    {formatAmount(
+                      market.totalYesBets || market.totalHigherBets,
+                      6
+                    )}{" "}
+                    USDC backed
                   </div>
                   <div className="mt-2 bg-success-100 rounded-full h-2">
                     <div
@@ -302,7 +409,11 @@ export default function MarketDetail({
                     </span>
                   </div>
                   <div className="text-sm text-danger-600">
-                    {formatAmount(market.totalNoBets, 6)} USDC backed
+                    {formatAmount(
+                      market.totalNoBets || market.totalLowerBets,
+                      6
+                    )}{" "}
+                    USDC backed
                   </div>
                   <div className="mt-2 bg-danger-100 rounded-full h-2">
                     <div
@@ -396,7 +507,23 @@ export default function MarketDetail({
         {showCreateModal && (
           <CreateMarketModal
             onClose={() => setShowCreateModal(false)}
-            onCreate={createMarket}
+            onCreate={async (
+              priceFeed: string,
+              assetName: string,
+              baseAsset: string,
+              targetPrice: string,
+              resolutionTime: number
+            ) => {
+              // Adaptar los parámetros al formato esperado por createMarket
+              const marketParams = {
+                priceFeed,
+                assetName,
+                baseAsset,
+                targetPrice: ethers.utils.parseUnits(targetPrice, 8), // Convertir a BigNumber con 8 decimales
+                resolutionTime,
+              };
+              return await createMarket(marketParams);
+            }}
           />
         )}
       </div>

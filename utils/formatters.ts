@@ -11,7 +11,16 @@ export const formatAmount = (amount: string, decimals: number = 18): string => {
 };
 
 export const formatDate = (timestamp: number): string => {
-  return new Date(timestamp * 1000).toLocaleString();
+  const date = new Date(timestamp * 1000);
+  return date.toLocaleString("en-US", {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
 };
 
 export const calculateTimeLeft = (timestamp: number): string => {
@@ -30,7 +39,7 @@ export const calculateTimeLeft = (timestamp: number): string => {
 };
 
 export const formatPercentage = (value: number): string => {
-  return `${(value / 100).toFixed(1)}%`;
+  return `${value.toFixed(1)}%`;
 };
 
 export const truncateText = (text: string, maxLength: number): string => {

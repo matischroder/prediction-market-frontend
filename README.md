@@ -8,7 +8,6 @@ Frontend application for the decentralized cross-chain prediction market platfor
 - 🔗 Web3 wallet integration with RainbowKit
 - ⚡ Real-time market data
 - 📱 Responsive design
-- 🔄 Cross-chain support (Mumbai, Sepolia)
 - 🎲 Interactive betting interface
 - 📊 Live odds and statistics
 - 🏆 Prize claiming system
@@ -31,16 +30,15 @@ npm install
 
 ## Configuration
 
-1. Copy `.env.example` to `.env.local`
+1. Copy `.env.example` to `.env`
 2. Add your API keys and project IDs
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
 Required environment variables:
 
-- `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID` - Get from [WalletConnect Cloud](https://cloud.walletconnect.com)
 - `NEXT_PUBLIC_ALCHEMY_ID` - Get from [Alchemy](https://www.alchemy.com)
 - `NEXT_PUBLIC_MARKET_FACTORY_ADDRESS` - Deployed contract address
 - `NEXT_PUBLIC_USDC_ADDRESS` - USDC token address
@@ -96,7 +94,7 @@ npm run export
 
 ### 💰 Betting System
 
-- Position selection (YES/NO)
+- Position selection (HIGHER/LOWER)
 - Amount input with validation
 - USDC approval flow
 - Potential payout calculation
@@ -137,7 +135,7 @@ The frontend integrates with several smart contracts:
 
 1. Browse available markets
 2. Click "Place Bet" on desired market
-3. Choose YES or NO position
+3. Choose HIGHER or LOWER position
 4. Enter bet amount
 5. Approve USDC (if needed)
 6. Confirm bet transaction

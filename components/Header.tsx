@@ -33,7 +33,7 @@ export const Header: FC<HeaderProps> = ({
               Powered by Chainlink
             </span>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             <button
               onClick={toggleDark}
               className="btn btn-secondary flex items-center justify-center p-2"
@@ -41,6 +41,7 @@ export const Header: FC<HeaderProps> = ({
             >
               {dark ? <Sun size={18} /> : <Moon size={18} />}
             </button>
+
             <button
               onClick={onCreateMarket}
               className="btn btn-primary flex items-center space-x-2"

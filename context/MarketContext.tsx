@@ -1,19 +1,25 @@
-import React, { createContext, useContext, ReactNode } from "react";
 import {
-  useMarkets as useMarketsQuery,
-  useCreateMarket,
-  useMarketOdds,
-  useUserBets,
-  usePlaceBet,
-  useClaimPrize,
-} from "../hooks/useMarketQueries";
-import { Market } from "../types/contracts";
+  createContext,
+  useContext,
+  ReactNode,
+  useEffect,
+  useState,
+} from "react";
+import { useMarketContract } from "../hooks/useMarketContract";
+import { Market, MarketOdds, UserBets } from "../types/contracts";
+import { ethers } from "ethers";
 
 interface MarketContextType {
   markets: Market[];
   loading: boolean;
   error: Error | null;
-  createMarket: (question: string, resolutionTime: number) => Promise<string>;
+  createMarket: (marketParams: {
+    assetName: string;
+    baseAsset: string;
+    targetPrice: ethers.BigNumber;
+    resolutionTime: number;
+    priceFeed: string;
+  }) => Promise<string | null>;
   refetchMarkets: () => void;
 }
 
@@ -28,32 +34,21 @@ export function MarketProvider({
   children,
   factoryAddress,
 }: MarketProviderProps) {
-  const {
-    data: markets = [],
-    isLoading: loading,
-    error,
-    refetch: refetchMarkets,
-  } = useMarketsQuery(factoryAddress);
+  console.log(
+    "MarketProvider initialized with factory address:",
+    factoryAddress
+  );
+  const { markets, loading, createMarket, fetchMarkets } =
+    useMarketContract(factoryAddress);
 
-  const createMarketMutation = useCreateMarket(factoryAddress);
-
-  const createMarket = async (
-    question: string,
-    resolutionTime: number
-  ): Promise<string> => {
-    const result = await createMarketMutation.mutateAsync({
-      question,
-      resolutionTime,
-    });
-    // Invalidar las queries para refrescar los datos
-    refetchMarkets();
-    return result;
+  const refetchMarkets = () => {
+    fetchMarkets();
   };
 
   const contextValue: MarketContextType = {
     markets,
-    loading: loading || createMarketMutation.isPending,
-    error: error as Error | null,
+    loading,
+    error: null, // useMarketContract doesn't expose error directly
     createMarket,
     refetchMarkets,
   };
@@ -65,32 +60,58 @@ export function MarketProvider({
   );
 }
 
-export function useMarkets() {
+export const useMarkets = (): MarketContextType => {
   const context = useContext(MarketContext);
   if (context === undefined) {
     throw new Error("useMarkets must be used within a MarketProvider");
   }
   return context;
-}
+};
 
-// Hook para usar datos específicos de un mercado
-export function useMarketData(marketAddress: string) {
-  const oddsQuery = useMarketOdds(marketAddress);
-  const userBetsQuery = useUserBets(marketAddress);
-  const placeBetMutation = usePlaceBet();
-  const claimPrizeMutation = useClaimPrize();
+// Additional hooks for market-specific data
+export const useMarketData = (marketAddress: string) => {
+  const { getMarketOdds, getUserBets } = useMarketContract(
+    process.env.NEXT_PUBLIC_MARKET_FACTORY_ADDRESS || ""
+  );
 
-  return {
-    odds: oddsQuery.data || { yesOdds: 5000, noOdds: 5000 },
-    userBets: userBetsQuery.data || {
-      yesBet: "0",
-      noBet: "0",
-      hasClaimed: false,
-    },
-    isLoading: oddsQuery.isLoading || userBetsQuery.isLoading,
-    placeBet: placeBetMutation.mutate,
-    claimPrize: claimPrizeMutation.mutate,
-    isPlacingBet: placeBetMutation.isPending,
-    isClaimingPrize: claimPrizeMutation.isPending,
-  };
-}
+  const [odds, setOdds] = useState<MarketOdds | null>(null);
+  const [userBets, setUserBets] = useState<UserBets>({
+    higherBet: "0",
+    lowerBet: "0",
+    hasClaimed: false,
+    betIndices: [],
+  });
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!marketAddress) return;
+
+      setIsLoading(true);
+      try {
+        const [oddsResult, betsResult] = await Promise.all([
+          getMarketOdds(marketAddress),
+          getUserBets(marketAddress),
+        ]);
+
+        if (oddsResult) setOdds(oddsResult);
+        if (betsResult) {
+          setUserBets({
+            higherBet: betsResult.higherBet || "0",
+            lowerBet: betsResult.lowerBet || "0",
+            hasClaimed: betsResult.hasClaimed || false,
+            betIndices: betsResult.betIndices || [],
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching market data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [marketAddress, getMarketOdds, getUserBets]);
+
+  return { odds, userBets, isLoading };
+};
