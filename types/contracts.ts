@@ -61,7 +61,7 @@ export interface UserBets {
 
 export interface ContractAddresses {
   marketFactory: string;
-  usdc: string;
+  nostronet: string;
   proofOfReserves?: string;
   ccipBridge?: string;
   chainlinkFunctions?: string;

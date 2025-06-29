@@ -1,25 +1,34 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNetwork } from "wagmi";
 import Head from "next/head";
 import { ethers } from "ethers";
 import { MarketCard } from "@/components/MarketCard";
-import { Search, Filter, TrendingUp, Users, DollarSign } from "lucide-react";
+import addresses from "@/contracts/addresses.json";
+import {
+  MemoizedSearch,
+  MemoizedFilter,
+  MemoizedTrendingUp,
+  MemoizedPlusCircle,
+  MemoizedGift,
+} from "@/components/MemoizedIcons";
 import { CreateMarketModal } from "@/components/CreateMarketModal";
+import { ClaimNosButton } from "@/components/ClaimNosButton";
 import { useMarkets } from "@/context/MarketContext";
-import { formatAmount } from "@/utils/formatters";
 import {
   usePopularFeedsFromContext,
   useAllFeedsFromContext,
 } from "@/context/ChainlinkFeedsContext";
+import { GlobalStats } from "@/components/GlobalStats";
 
 interface HomeProps {
   showCreateModal: boolean;
   setShowCreateModal: (show: boolean) => void;
+  onCreateMarket: () => void;
 }
 
 export default function Home({
   showCreateModal,
   setShowCreateModal,
+  onCreateMarket,
 }: HomeProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "resolved">("all");
@@ -61,20 +70,24 @@ export default function Home({
     }
   }, [popularFeeds.feeds.length, allFeeds.feeds.length]);
 
-  // Get contract addresses from env
-  const contractAddresses = {
-    marketFactory: process.env.NEXT_PUBLIC_MARKET_FACTORY_ADDRESS || "",
-    usdc: process.env.NEXT_PUBLIC_USDC_ADDRESS || "",
-    proofOfReserves: process.env.NEXT_PUBLIC_PROOF_OF_RESERVES_ADDRESS || "",
-    ccipBridge: process.env.NEXT_PUBLIC_CCIP_BRIDGE_ADDRESS || "",
-    chainlinkFunctions:
-      process.env.NEXT_PUBLIC_CHAINLINK_FUNCTIONS_ADDRESS || "",
-  };
+  // Get contract addresses from addresses.json
+  const contractAddresses = addresses?.contracts || null;
 
   // Filter markets based on search and filter - optimized with useMemo
   const filteredMarkets = useMemo(() => {
     console.log("MARKETS", markets);
     return markets.filter((market) => {
+      // Filter out empty markets (no bets) that have passed resolution time
+      const totalBets =
+        parseFloat(market.totalHigherBets) + parseFloat(market.totalLowerBets);
+      const isExpired = market.resolutionTime * 1000 <= Date.now();
+
+      console.log("MARKET", market);
+      // Hide markets with no bets that have expired (can't be resolved or bet on)
+      if (totalBets === 0 && isExpired) {
+        return false;
+      }
+
       if (filter === "active") {
         return !market.isResolved && market.resolutionTime * 1000 > Date.now();
       }
@@ -86,27 +99,6 @@ export default function Home({
       return true;
     });
   }, [markets, searchTerm, filter]);
-
-  // Calculate stats - optimized with useMemo
-  const { totalMarkets, activeMarkets, totalVolume } = useMemo(() => {
-    const total = markets.length;
-    const active = markets.filter(
-      (m) => !m.isResolved && m.resolutionTime * 1000 > Date.now()
-    ).length;
-    const volume = markets.reduce((sum, market) => {
-      return (
-        sum +
-        parseFloat(market.totalHigherBets) +
-        parseFloat(market.totalLowerBets)
-      );
-    }, 0);
-
-    return {
-      totalMarkets: total,
-      activeMarkets: active,
-      totalVolume: volume,
-    };
-  }, [markets]);
 
   console.log("filteredMarkets", filteredMarkets);
 
@@ -131,65 +123,71 @@ export default function Home({
             </h1>
             <p className="text-base sm:text-xl text-palette-text-light dark:text-palette-text-dark max-w-3xl mx-auto">
               Bet on real-world events with transparent, automated resolution
-              powered by Chainlink oracles. Cross-chain compatible with
-              verifiable randomness and proof of reserves.
+              powered by Chainlink oracles. Decentralized, secure, and fully
+              verifiable on-chain.
             </p>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-            <div className="card text-center">
-              <div className="flex items-center justify-center mb-2">
-                <TrendingUp
-                  className="text-palette-primary-light dark:text-palette-primary-dark"
-                  size={24}
-                />
-              </div>
-              <div className="text-2xl font-bold text-palette-text-light dark:text-palette-text-dark">
-                {totalMarkets}
-              </div>
-              <div className="text-sm text-palette-text-light dark:text-palette-text-dark">
-                Total Markets
-              </div>
-            </div>
-
-            <div className="card text-center">
-              <div className="flex items-center justify-center mb-2">
-                <Users
-                  className="text-success-600 dark:text-success-500"
-                  size={24}
-                />
-              </div>
-              <div className="text-2xl font-bold text-palette-text-light dark:text-palette-text-dark">
-                {activeMarkets}
-              </div>
-              <div className="text-sm text-palette-text-light dark:text-palette-text-dark">
-                Active Markets
+          {/* Action Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 max-w-3xl mx-auto">
+            {/* Create Market Card */}
+            <div
+              className="relative group cursor-pointer h-24"
+              onClick={onCreateMarket}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+              <div className="relative bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-transparent transition-all duration-300 h-full">
+                <div className="flex items-center h-full">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg">
+                      <MemoizedPlusCircle size={24} className="text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Create Market
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Launch your prediction market
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="card text-center">
-              <div className="flex items-center justify-center mb-2">
-                <DollarSign
-                  className="text-palette-primary-light dark:text-palette-primary-dark"
-                  size={24}
-                />
-              </div>
-              <div className="text-2xl font-bold text-palette-text-light dark:text-palette-text-dark">
-                {totalVolume > 1000000000
-                  ? (totalVolume / 1000000000).toFixed(2) + "K"
-                  : (totalVolume / 1000000).toFixed(0)}
-              </div>
-              <div className="text-sm text-palette-text-light dark:text-palette-text-dark">
-                Volume
+            {/* Claim NOS Card */}
+            <div className="relative group h-24">
+              <div className="absolute inset-0 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+              <div className="relative bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-transparent transition-all duration-300 h-full">
+                <div className="flex items-center justify-between h-full">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
+                      <MemoizedGift size={24} className="text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Claim NOS
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Get free tokens every 24h
+                      </p>
+                    </div>
+                  </div>
+                  <div className="shrink-0">
+                    <ClaimNosButton />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Stats */}
+          <GlobalStats markets={markets} loading={loading} />
 
           {/* Search and Filter */}
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
             <div className="relative flex-1">
-              <Search
+              <MemoizedSearch
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                 size={20}
               />
@@ -203,7 +201,7 @@ export default function Home({
             </div>
 
             <div className="flex items-center space-x-2">
-              <Filter size={20} className="text-gray-400" />
+              <MemoizedFilter size={20} className="text-gray-400" />
               <select
                 value={filter}
                 onChange={(e) =>
@@ -241,14 +239,14 @@ export default function Home({
                   key={market.address}
                   market={market}
                   factoryAddress={contractAddresses?.marketFactory || ""}
-                  usdcAddress={contractAddresses?.usdc || ""}
+                  nostronetAddress={contractAddresses?.nostronet || ""}
                 />
               ))}
             </div>
           ) : (
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4">
-                <TrendingUp size={48} className="mx-auto" />
+                <MemoizedTrendingUp size={48} className="mx-auto" />
               </div>
               <h3 className="text-xl font-medium text-gray-900 mb-2">
                 {searchTerm || filter !== "all"

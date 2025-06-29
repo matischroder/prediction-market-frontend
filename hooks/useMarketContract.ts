@@ -566,20 +566,19 @@ export function useMarketContract(factoryAddress: string) {
 
   const manualResolve = useCallback(
     async (marketAddress: string): Promise<boolean> => {
-      if (!signer || !address) {
-        console.error("Wallet not connected");
+      if (!signer || !address || !factoryContract) {
+        console.error("Wallet not connected or factory contract not available");
         return false;
       }
 
       try {
-        const marketContract = new ethers.Contract(
-          marketAddress,
-          PredictionMarketABI.abi,
-          signer
-        );
+        const factoryContractWithSigner = factoryContract.connect(signer);
 
-        console.log("Manually resolving market:", marketAddress);
-        const tx = await marketContract.emergencyResolve();
+        console.log(
+          "Manually resolving market through factory:",
+          marketAddress
+        );
+        const tx = await factoryContractWithSigner.resolveMarket(marketAddress);
         console.log("Transaction sent:", tx.hash);
 
         const receipt = await tx.wait();
@@ -596,7 +595,7 @@ export function useMarketContract(factoryAddress: string) {
         return false;
       }
     },
-    [signer, address, fetchMarkets]
+    [signer, address, factoryContract, fetchMarkets]
   );
 
   return {

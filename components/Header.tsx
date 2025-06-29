@@ -1,19 +1,14 @@
 import { FC } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { PlusCircle, Sun, Moon } from "lucide-react";
+import { MemoizedSun, MemoizedMoon } from "./MemoizedIcons";
 import clsx from "clsx";
 
 interface HeaderProps {
-  onCreateMarket: () => void;
   dark: boolean;
   toggleDark: () => void;
 }
 
-export const Header: FC<HeaderProps> = ({
-  onCreateMarket,
-  dark,
-  toggleDark,
-}) => {
+export const Header: FC<HeaderProps> = ({ dark, toggleDark }) => {
   return (
     <header
       className={clsx(
@@ -26,31 +21,32 @@ export const Header: FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-palette-primary-light dark:text-palette-primary-dark">
-              Prediction Markets
-            </h1>
-            <span className="ml-2 text-sm text-palette-text-light dark:text-palette-text-dark bg-palette-card-light dark:bg-palette-card-dark px-2 py-1 rounded">
+            <div className="flex items-center">
+              <div className="w-10 h-10 mr-3 rounded-full overflow-hidden">
+                <img
+                  src="/icon1.png"
+                  alt="Nostronet Logo"
+                  className="w-full h-full object-cover object-center"
+                  style={{ transform: "scale(1.3)" }}
+                />
+              </div>
+              <h1 className="hidden sm:block text-2xl font-bold text-palette-primary-light dark:text-palette-primary-dark">
+                Nostronet
+              </h1>
+            </div>
+            <span className="hidden sm:inline ml-2 text-sm text-palette-text-light dark:text-palette-text-dark bg-palette-card-light dark:bg-palette-card-dark px-2 py-1 rounded">
               Powered by Chainlink
             </span>
           </div>
           <div className="flex items-center space-x-3">
+            <ConnectButton />
             <button
               onClick={toggleDark}
               className="btn btn-secondary flex items-center justify-center p-2"
               aria-label="Toggle dark mode"
             >
-              {dark ? <Sun size={18} /> : <Moon size={18} />}
+              {dark ? <MemoizedSun size={18} /> : <MemoizedMoon size={18} />}
             </button>
-
-            <button
-              onClick={onCreateMarket}
-              className="btn btn-primary flex items-center space-x-2"
-            >
-              <PlusCircle size={20} />
-              <span className="hidden sm:inline">Create Market</span>
-            </button>
-
-            <ConnectButton />
           </div>
         </div>
       </div>

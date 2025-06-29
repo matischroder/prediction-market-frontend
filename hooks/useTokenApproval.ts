@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { ethers } from "ethers";
-import { useWalletClient, usePublicClient } from "wagmi";
-import { getCachedProvider, getCachedSigner } from "@/utils/providerCache";
+import { useWalletClient } from "wagmi";
+import { getCachedSigner } from "@/utils/providerCache";
 
 const ERC20_ABI = [
   "function allowance(address owner, address spender) view returns (uint256)",
@@ -11,14 +11,9 @@ const ERC20_ABI = [
 ];
 
 export function useTokenApproval(tokenAddress: string) {
+  console.log("TOKEN ADDRESS", tokenAddress);
   const { data: walletClient } = useWalletClient();
-  const publicClient = usePublicClient();
   const [isApproving, setIsApproving] = useState(false);
-
-  // Use cached ethers provider and signer to prevent recreation and multiple eth_chainId calls
-  const provider = useMemo(() => {
-    return getCachedProvider(publicClient);
-  }, [publicClient]);
 
   const signer = useMemo(() => {
     return getCachedSigner(walletClient);
@@ -64,10 +59,21 @@ export function useTokenApproval(tokenAddress: string) {
     [signer, tokenAddress]
   );
 
+  const getDecimals = useCallback(async (): Promise<number> => {
+    try {
+      const token = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
+      return await token.decimals();
+    } catch (error) {
+      console.error("Error getting token decimals:", error);
+      return 18;
+    }
+  }, [signer, tokenAddress]);
+
   return {
     checkAllowance,
     approve,
     getBalance,
+    getDecimals,
     isApproving,
   };
 }

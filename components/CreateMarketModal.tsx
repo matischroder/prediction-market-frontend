@@ -14,6 +14,7 @@ import {
 import toast from "react-hot-toast";
 import { useNetwork } from "wagmi";
 import { PriceFeedSelector } from "./PriceFeedSelector";
+import { useSimpleFeedPrice } from "../hooks/useFeedPrice";
 import {
   usePopularFeedsFromContext,
   useAllFeedsFromContext,
@@ -47,6 +48,13 @@ export const CreateMarketModal: FC<CreateMarketModalProps> = ({
   const allFeeds = useAllFeedsFromContext();
 
   const currentFeeds = showAllFeeds ? allFeeds.feeds : popularFeeds.feeds;
+
+  // Get current price from selected feed
+  const feedPrice = useSimpleFeedPrice(
+    selectedFeed
+      ? selectedFeed.proxyAddress || selectedFeed.contractAddress
+      : ""
+  );
 
   // Animate loading dots: Creating -> Creating. -> Creating.. -> Creating...
   useEffect(() => {
@@ -147,8 +155,8 @@ export const CreateMarketModal: FC<CreateMarketModalProps> = ({
   const minDateTime = new Date(Date.now() + 3600000).toISOString().slice(0, 16);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-palette-card-light dark:bg-palette-card-dark rounded-xl max-w-2xl w-full p-6 max-h-90vh overflow-y-auto text-palette-text-light dark:text-palette-text-dark border border-palette-border-light dark:border-palette-border-dark">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+      <div className="bg-palette-card-light dark:bg-palette-card-dark rounded-xl max-w-2xl w-full p-6 max-h-[90vh] my-auto overflow-y-auto text-palette-text-light dark:text-palette-text-dark border border-palette-border-light dark:border-palette-border-dark">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-palette-text-light dark:text-palette-text-dark">
             Create Prediction Market
@@ -226,7 +234,7 @@ export const CreateMarketModal: FC<CreateMarketModalProps> = ({
               placeholder="Choose a price feed for your market"
             />
             {selectedFeed && (
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 space-y-1">
                 <p>
                   Selected: {formatFeedName(selectedFeed)} ({selectedFeed.name})
                 </p>
@@ -234,6 +242,28 @@ export const CreateMarketModal: FC<CreateMarketModalProps> = ({
                   Address:{" "}
                   {selectedFeed.proxyAddress || selectedFeed.contractAddress}
                 </p>
+                <div className="flex items-center space-x-1">
+                  <span>Current Price:</span>
+                  <div className="flex items-center space-x-1">
+                    {feedPrice.isLoading ? (
+                      <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-3 w-16 rounded"></div>
+                    ) : feedPrice.error ? (
+                      <span className="text-red-500 text-xs">
+                        Error loading
+                      </span>
+                    ) : (
+                      <>
+                        <span className="font-semibold text-blue-600 dark:text-blue-400">
+                          {feedPrice.formattedPrice}
+                        </span>
+                        <div
+                          className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"
+                          title="Live price"
+                        ></div>
+                      </>
+                    )}
+                  </div>
+                </div>
                 {selectedFeed.proxyAddress &&
                   selectedFeed.contractAddress &&
                   selectedFeed.proxyAddress !==
@@ -285,7 +315,7 @@ export const CreateMarketModal: FC<CreateMarketModalProps> = ({
               type="datetime-local"
               value={resolutionDate}
               onChange={(e) => setResolutionDate(e.target.value)}
-              className="input w-full"
+              className="input w-full dark:[color-scheme:dark]"
               min={minDateTime}
               required
             />
@@ -324,31 +354,57 @@ export const CreateMarketModal: FC<CreateMarketModalProps> = ({
                     </span>
                   </div>
                 </div>
-                <p className="text-xs text-gray-600 dark:text-gray-400 pt-2">
-                  Price Feed: {selectedFeed.name} {chain && `on ${chain.name}`}
-                </p>
+                <div className="pt-2 space-y-1">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    Price Feed: {selectedFeed.name}{" "}
+                    {chain && `on ${chain.name}`}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Current Price:
+                    </span>
+                    <div className="flex items-center space-x-1">
+                      {feedPrice.isLoading ? (
+                        <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-3 w-16 rounded"></div>
+                      ) : feedPrice.error ? (
+                        <span className="text-red-500 text-xs">Error</span>
+                      ) : (
+                        <>
+                          <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                            {feedPrice.formattedPrice}
+                          </span>
+                          <div
+                            className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"
+                            title="Live price"
+                          ></div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Market Rules */}
-          <div className="bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-            <h4 className="font-medium text-gray-900 dark:text-gray-200 mb-2">
-              Market Rules & Fees
-            </h4>
-            <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
-              <li>
-                • Markets resolve automatically using Chainlink price feeds
-              </li>
-              <li>
-                • Winners share the losing pool proportionally to their bet size
-              </li>
-              <li>• Treasury fee: 2% deducted from total pool</li>
-              <li>• Random bonus: 2% awarded to a random participant</li>
-              <li>• Resolution uses Chainlink's price at the specified time</li>
-              <li>• Automation powered by Chainlink Automation</li>
-            </ul>
-          </div>
+          {/* Market Rules - Only show when no preview is available */}
+          {!(selectedFeed && targetPrice) && (
+            <div className="bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <h4 className="font-medium text-gray-900 dark:text-gray-200 mb-2">
+                Market Rules & Fees
+              </h4>
+              <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                <li>
+                  • Markets resolve automatically using Chainlink price feeds
+                </li>
+                <li>
+                  • Winners share the losing pool proportionally to their bet
+                  size
+                </li>
+                <li>• Treasury fee: 2% deducted from total pool</li>
+                <li>• Random bonus: 2% awarded to a random participant</li>
+              </ul>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex space-x-3">

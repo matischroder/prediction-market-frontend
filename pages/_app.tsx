@@ -10,6 +10,7 @@ import {
   Theme,
 } from "@rainbow-me/rainbowkit";
 import { configureChains, createConfig, WagmiConfig } from "wagmi";
+import { alchemyProvider } from "wagmi/providers/alchemy";
 import { publicProvider } from "wagmi/providers/public";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
@@ -31,7 +32,12 @@ const walletConfig = getWalletConfig();
 
 const { chains, publicClient } = configureChains(
   chainConfig.chains,
-  [publicProvider()],
+  [
+    alchemyProvider({
+      apiKey: process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL?.split("/").pop() || "",
+    }),
+    publicProvider(),
+  ],
   providerConfig
 );
 
@@ -85,7 +91,7 @@ function AppWithMarketContract({
   // Get contract addresses from env based on network
   const contractAddresses = {
     marketFactory: process.env.NEXT_PUBLIC_MARKET_FACTORY_ADDRESS || "",
-    usdc: process.env.NEXT_PUBLIC_USDC_ADDRESS || "",
+    nostronet: process.env.NEXT_PUBLIC_NOSTRONET_ADDRESS || "",
     proofOfReserves: process.env.NEXT_PUBLIC_PROOF_OF_RESERVES_ADDRESS || "",
     ccipBridge: process.env.NEXT_PUBLIC_CCIP_BRIDGE_ADDRESS || "",
     chainlinkFunctions:
@@ -95,15 +101,12 @@ function AppWithMarketContract({
   return (
     <MarketProvider factoryAddress={contractAddresses.marketFactory}>
       <ChainlinkFeedsProvider>
-        <Header
-          dark={dark}
-          toggleDark={toggleDark}
-          onCreateMarket={() => setShowCreateModal(true)}
-        />
+        <Header dark={dark} toggleDark={toggleDark} />
         <Component
           {...pageProps}
           showCreateModal={showCreateModal}
           setShowCreateModal={setShowCreateModal}
+          onCreateMarket={() => setShowCreateModal(true)}
         />
       </ChainlinkFeedsProvider>
     </MarketProvider>
@@ -192,7 +195,7 @@ export default function App({ Component, pageProps }: AppProps) {
           />
           {/* El modal CreateMarketModal se renderiza en cada página, no aquí */}
           <Toaster
-            position="top-right"
+            position="bottom-right"
             toastOptions={{
               duration: 4000,
               style: {

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNetwork } from "wagmi";
 import { useMarketContract } from "../hooks/useMarketContract";
+import { useAutoFunding } from "../hooks/useAutoFunding";
 import { Header } from "./Header";
+import { getContractAddress } from "../utils/contracts";
 
 interface AppContentProps {
   Component: any;
@@ -22,14 +24,10 @@ export function AppContent({
 }: AppContentProps) {
   const { chain } = useNetwork();
 
-  // Get contract addresses from env based on network
+  // Get contract addresses from deployed addresses
   const contractAddresses = {
-    marketFactory: process.env.NEXT_PUBLIC_MARKET_FACTORY_ADDRESS || "",
-    usdc: process.env.NEXT_PUBLIC_USDC_ADDRESS || "",
-    proofOfReserves: process.env.NEXT_PUBLIC_PROOF_OF_RESERVES_ADDRESS || "",
-    ccipBridge: process.env.NEXT_PUBLIC_CCIP_BRIDGE_ADDRESS || "",
-    chainlinkFunctions:
-      process.env.NEXT_PUBLIC_CHAINLINK_FUNCTIONS_ADDRESS || "",
+    marketFactory: getContractAddress("marketFactory"),
+    nostronet: getContractAddress("nostronet"),
   };
 
   // Hook para obtener la función createMarket
@@ -37,13 +35,12 @@ export function AppContent({
     contractAddresses.marketFactory
   );
 
+  // Auto-funding hook (automatically funds new wallets)
+  useAutoFunding();
+
   return (
     <>
-      <Header
-        dark={dark}
-        toggleDark={toggleDark}
-        onCreateMarket={() => setShowCreateModal(true)}
-      />
+      <Header dark={dark} toggleDark={toggleDark} />
       <Component
         {...pageProps}
         showCreateModal={showCreateModal}

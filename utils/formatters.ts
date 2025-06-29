@@ -32,10 +32,47 @@ export const calculateTimeLeft = (timestamp: number): string => {
   const days = Math.floor(diff / 86400);
   const hours = Math.floor((diff % 86400) / 3600);
   const minutes = Math.floor((diff % 3600) / 60);
+  const seconds = Math.floor(diff % 60);
 
-  if (days > 0) return `${days}d ${hours}h`;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes}m`;
+  const parts = [];
+
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (seconds > 0 && days === 0 && hours === 0) parts.push(`${seconds}s`);
+
+  return parts.join(" ");
+};
+
+export const calculateTimeLeftDetailed = (
+  timestamp: number
+): {
+  text: string;
+  isUrgent: boolean;
+  totalSeconds: number;
+} => {
+  const now = Date.now() / 1000;
+  const diff = timestamp - now;
+
+  if (diff <= 0) return { text: "Ended", isUrgent: false, totalSeconds: 0 };
+
+  const days = Math.floor(diff / 86400);
+  const hours = Math.floor((diff % 86400) / 3600);
+  const minutes = Math.floor((diff % 3600) / 60);
+  const seconds = Math.floor(diff % 60);
+
+  const parts = [];
+
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (seconds > 0 && days === 0 && hours === 0) parts.push(`${seconds}s`);
+
+  return {
+    text: parts.join(" "),
+    isUrgent: diff < 60,
+    totalSeconds: Math.floor(diff),
+  };
 };
 
 export const formatPercentage = (value: number): string => {

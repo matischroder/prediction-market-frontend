@@ -1,10 +1,9 @@
 {
   "network": "sepolia",
   "chainId": 11155111,
-  "deployedAt": "2025-06-28T12:25:32.303Z",
+  "deployedAt": "2025-06-29T14:21:13.592Z",
   "contracts": {
-    "mockUSDC": "0xDAE4B69d86863263A275BA10289f6919F0EE7137",
-    "marketFactory": "0x440e762AB458513bF6E658F1458eF0FE7a4DaA0f",
+    "marketFactory": "0x5469D7256DBF4c5B63F1FA940AaaAd4fE029Fa7f",
     "testMarket": "Not created - needs LINK funding"
   },
   "priceFeeds": {
