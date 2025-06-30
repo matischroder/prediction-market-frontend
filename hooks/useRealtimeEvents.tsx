@@ -211,7 +211,7 @@ export function useRealtimeEvents({
         };
       }
     } catch (error) {
-      console.error("Error setting up realtime events:", error);
+      // console.error("Error setting up realtime events:", error);
       setConnectionStatus("disconnected");
     }
   }, [

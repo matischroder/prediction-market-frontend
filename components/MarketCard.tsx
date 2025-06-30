@@ -292,34 +292,37 @@ export const MarketCard: FC<MarketCardProps> = ({
               </div>
 
               {/* Automation status */}
-              {market.isAutomated && (
-                <div className="space-y-2 text-xs p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  {!market.automationRegistered && (
-                    <div className="flex items-center text-yellow-600 dark:text-yellow-400">
-                      <Clock size={12} className="mr-2 flex-shrink-0" />
-                      <span>Automation pending registration</span>
-                    </div>
-                  )}
+              {market.isAutomated &&
+                (!market.automationRegistered ||
+                  (market.isResolved && !market.vrfFulfilled) ||
+                  (market.isResolved && market.randomWinner)) && (
+                  <div className="space-y-2 text-xs p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    {!market.automationRegistered && (
+                      <div className="flex items-center text-yellow-600 dark:text-yellow-400">
+                        <Clock size={12} className="mr-2 flex-shrink-0" />
+                        <span>Automation pending registration</span>
+                      </div>
+                    )}
 
-                  {market.isResolved && !market.vrfFulfilled && (
-                    <div className="flex items-center text-orange-600 dark:text-orange-400">
-                      <Zap size={12} className="mr-2 flex-shrink-0" />
-                      <span>VRF random selection pending</span>
-                    </div>
-                  )}
+                    {market.isResolved && !market.vrfFulfilled && (
+                      <div className="flex items-center text-orange-600 dark:text-orange-400">
+                        <Zap size={12} className="mr-2 flex-shrink-0" />
+                        <span>VRF random selection pending</span>
+                      </div>
+                    )}
 
-                  {market.isResolved && market.randomWinner && (
-                    <div className="flex items-center text-purple-600 dark:text-purple-400">
-                      <Gift size={12} className="mr-2 flex-shrink-0" />
-                      <span>
-                        Random winner: {market.randomWinner.slice(0, 8)}...
-                      </span>
-                      {market.bonusAmount &&
-                        ` (+$${formatAmount(market.bonusAmount, 6)})`}
-                    </div>
-                  )}
-                </div>
-              )}
+                    {market.isResolved && market.randomWinner && (
+                      <div className="flex items-center text-purple-600 dark:text-purple-400">
+                        <Gift size={12} className="mr-2 flex-shrink-0" />
+                        <span>
+                          Random winner: {market.randomWinner.slice(0, 8)}...
+                        </span>
+                        {market.bonusAmount &&
+                          ` (+$${formatAmount(market.bonusAmount, 6)})`}
+                      </div>
+                    )}
+                  </div>
+                )}
 
               {/* Odds Display */}
               <div className="grid grid-cols-2 gap-3">
