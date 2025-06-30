@@ -17,6 +17,7 @@ import { Toaster } from "react-hot-toast";
 import { useState, useEffect, useCallback } from "react";
 import { useNetwork } from "wagmi";
 import { Header } from "../components/Header";
+import { ClientOnly } from "../components/ClientOnly";
 import { MarketProvider } from "../context/MarketContext";
 import { ChainlinkFeedsProvider } from "../context/ChainlinkFeedsContext";
 import {
@@ -53,22 +54,30 @@ const wagmiConfig = createConfig({
   publicClient,
 });
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 2 * 60 * 1000, // 2 minutos - datos son frescos por más tiempo
-      gcTime: 15 * 60 * 1000, // 15 minutos - mantener en cache más tiempo
-      retry: 1, // Solo 1 retry para evitar requests innecesarias
-      refetchOnWindowFocus: false, // No refetch al cambiar de ventana
-      refetchOnMount: false, // No refetch al montar si hay datos en cache
-      refetchOnReconnect: false, // No refetch al reconectar
-      refetchInterval: false, // Desactivar refetch automático por defecto
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
-});
+// Crear QueryClient de forma que sea compatible con SSR
+let queryClient: QueryClient;
+
+function getQueryClient() {
+  if (!queryClient) {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          staleTime: 2 * 60 * 1000, // 2 minutos
+          gcTime: 15 * 60 * 1000, // 15 minutos
+          retry: 1,
+          refetchOnWindowFocus: false,
+          refetchOnMount: false,
+          refetchOnReconnect: false,
+          refetchInterval: false,
+        },
+        mutations: {
+          retry: 1,
+        },
+      },
+    });
+  }
+  return queryClient;
+}
 
 // Componente interno que tiene acceso a los hooks de wagmi
 function AppWithMarketContract({
@@ -177,50 +186,57 @@ export default function App({ Component, pageProps }: AppProps) {
       });
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <WagmiConfig config={wagmiConfig}>
-        <RainbowKitProvider
-          chains={chains}
-          theme={rainbowTheme}
-          modalSize="compact"
-          initialChain={chainConfig.defaultChain}
-        >
-          <AppWithMarketContract
-            Component={Component}
-            pageProps={pageProps}
-            dark={dark}
-            toggleDark={toggleDark}
-            showCreateModal={showCreateModal}
-            setShowCreateModal={setShowCreateModal}
-          />
-          {/* El modal CreateMarketModal se renderiza en cada página, no aquí */}
-          <Toaster
-            position="bottom-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: "#363636",
-                color: "#fff",
-              },
-              success: {
-                duration: 3000,
-                iconTheme: {
-                  primary: "#22c55e",
-                  secondary: "#fff",
-                },
-              },
-              error: {
+    <ClientOnly fallback={<div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600 dark:text-gray-400">Loading Nostronet...</p>
+      </div>
+    </div>}>
+      <QueryClientProvider client={getQueryClient()}>
+        <WagmiConfig config={wagmiConfig}>
+          <RainbowKitProvider
+            chains={chains}
+            theme={rainbowTheme}
+            modalSize="compact"
+            initialChain={chainConfig.defaultChain}
+          >
+            <AppWithMarketContract
+              Component={Component}
+              pageProps={pageProps}
+              dark={dark}
+              toggleDark={toggleDark}
+              showCreateModal={showCreateModal}
+              setShowCreateModal={setShowCreateModal}
+            />
+            {/* El modal CreateMarketModal se renderiza en cada página, no aquí */}
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
                 duration: 4000,
-                iconTheme: {
-                  primary: "#ef4444",
-                  secondary: "#fff",
+                style: {
+                  background: "#363636",
+                  color: "#fff",
                 },
-              },
-            }}
-          />
-          {/* DevTools removido para reducir bundle size */}
-        </RainbowKitProvider>
-      </WagmiConfig>
-    </QueryClientProvider>
+                success: {
+                  duration: 3000,
+                  iconTheme: {
+                    primary: "#22c55e",
+                    secondary: "#fff",
+                  },
+                },
+                error: {
+                  duration: 4000,
+                  iconTheme: {
+                    primary: "#ef4444",
+                    secondary: "#fff",
+                  },
+                },
+              }}
+            />
+            {/* DevTools removido para reducir bundle size */}
+          </RainbowKitProvider>
+        </WagmiConfig>
+      </QueryClientProvider>
+    </ClientOnly>
   );
 }
